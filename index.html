@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Ticket Transcript</title>
+<style>
+  :root {
+    --bg: #313338;
+    --bg-dark: #2b2d31;
+    --bg-darker: #1e1f22;
+    --text: #dbdee1;
+    --muted: #949ba4;
+    --heading: #f2f3f5;
+    --link: #00a8fc;
+    --code: #2b2d31;
+    --accent: #faa61a;
+    --error: #f23f43;
+    --bot: #5865f2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font: 16px/1.375 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header {
+    background: var(--bg-dark);
+    border-bottom: 1px solid var(--bg-darker);
+    padding: 20px 16px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  header h1 { margin: 0 0 4px; font-size: 20px; color: var(--heading); }
+  header .sub { color: var(--muted); font-size: 14px; }
+  .info {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .info div { background: var(--bg-darker); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+  .info b { display: block; font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spacing: .02em; }
+  .info span { overflow-wrap: anywhere; }
+
+  main { padding: 16px 0 48px; }
+  .msg { display: flex; gap: 16px; padding: 2px 16px; margin-top: 16px; }
+  .msg.cont { margin-top: 0; }
+  .msg:hover { background: rgba(0, 0, 0, .06); }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; flex: none; background: var(--bg-darker); }
+  .msg.cont .avatar { visibility: hidden; height: 0; }
+  .body { min-width: 0; flex: 1; }
+  .meta { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .name { font-weight: 600; color: var(--heading); }
+  .tag {
+    background: var(--bot); color: #fff; font-size: 10px; font-weight: 600;
+    padding: 1px 4px; border-radius: 3px; text-transform: uppercase;
+  }
+  .time { color: var(--muted); font-size: 12px; }
+  .content { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .edited { color: var(--muted); font-size: 10px; }
+  code { background: var(--code); border-radius: 3px; padding: 0 3px; font-size: 14px; font-family: Consolas, "Courier New", monospace; }
+  pre { background: var(--code); border: 1px solid var(--bg-darker); border-radius: 4px; padding: 8px; overflow-x: auto; white-space: pre-wrap; margin: 4px 0; }
+  pre code { background: none; padding: 0; }
+  blockquote { margin: 2px 0; padding-left: 10px; border-left: 4px solid #4e5058; }
+
+  .embed {
+    background: var(--bg-dark); border-left: 4px solid #1e1f22; border-radius: 4px;
+    padding: 8px 16px 12px 12px; margin-top: 4px; max-width: 520px;
+  }
+  .embed .author { font-size: 14px; font-weight: 600; color: var(--heading); margin-top: 4px; }
+  .embed .title { font-weight: 600; color: var(--heading); margin-top: 6px; }
+  .embed .desc { font-size: 14px; margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .embed .fields { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 8px; }
+  .embed .field { flex: 1 1 100%; min-width: 0; font-size: 14px; }
+  .embed .field.inline { flex: 1 1 140px; }
+  .embed .field b { display: block; color: var(--heading); }
+  .embed .field div { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .embed img.big { max-width: 100%; border-radius: 4px; margin-top: 8px; }
+  .embed .footer { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .attach { margin-top: 4px; }
+  .attach img { max-width: min(400px, 100%); max-height: 350px; border-radius: 6px; display: block; }
+  .file {
+    display: inline-block; background: var(--bg-dark); border: 1px solid var(--bg-darker);
+    border-radius: 6px; padding: 10px 12px; font-size: 14px;
+  }
+  .file small { color: var(--muted); display: block; }
+
+  .state { text-align: center; padding: 80px 16px; color: var(--muted); }
+  .state h2 { color: var(--heading); margin: 0 0 8px; }
+  .state.error h2 { color: var(--error); }
+  .count { color: var(--muted); font-size: 14px; padding: 0 16px; }
+
+  @media (max-width: 600px) {
+    .msg { gap: 10px; padding: 2px 12px; }
+    .avatar { width: 32px; height: 32px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1 id="title">Ticket Transcript</h1>
+    <div class="sub" id="subtitle">Decrypting…</div>
+    <div class="info" id="info"></div>
+  </div>
+</header>
+<main>
+  <div class="wrap" id="out">
+    <div class="state"><h2>Loading transcript</h2>This only takes a moment.</div>
+  </div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const out = document.getElementById("out");
+
+  function fail(title, text) {
+    document.getElementById("subtitle").textContent = "";
+    out.innerHTML = "";
+    const box = el("div", "state error");
+    box.append(el("h2", null, title), document.createTextNode(text));
+    out.append(box);
+  }
+
+  function el(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  // ---- Decrypting ----------------------------------------------------------
+  // Files are AES-256-GCM: the first 12 bytes are the nonce, the rest is the
+  // encrypted transcript. The key is only in the link after the #, so it never
+  // reaches GitHub or any server.
+
+  function fromBase64Url(text) {
+    const b64 = text.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((text.length + 3) % 4);
+    const raw = atob(b64);
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return bytes;
+  }
+
+  async function load() {
+    const name = new URLSearchParams(location.search).get("t") || "";
+    const key = location.hash.slice(1);
+
+    if (!/^[a-z]+\/[A-Za-z0-9-]+$/.test(name) || !key) {
+      fail("Link not complete", "This link is missing part of the transcript address or its key. Ask staff for the full link.");
+      return;
+    }
+
+    let blob;
+    try {
+      const response = await fetch(`./${name}.bin`, { cache: "no-store" });
+      if (!response.ok) throw new Error(String(response.status));
+      blob = new Uint8Array(await response.arrayBuffer());
+    } catch (e) {
+      fail("Transcript not found", "This transcript doesn't exist or hasn't finished publishing yet. Try again in a minute.");
+      return;
+    }
+
+    let data;
+    try {
+      const cryptoKey = await crypto.subtle.importKey("raw", fromBase64Url(key), "AES-GCM", false, ["decrypt"]);
+      const plain = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: blob.slice(0, 12) },
+        cryptoKey,
+        blob.slice(12)
+      );
+      data = JSON.parse(new TextDecoder().decode(plain));
+    } catch (e) {
+      fail("Can't open transcript", "The key in this link doesn't match the transcript. Make sure you copied the whole link.");
+      return;
+    }
+
+    render(data);
+  }
+
+  // ---- Formatting ----------------------------------------------------------
+
+  function fmtTime(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return isNaN(d) ? "" : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  }
+
+  function fmtSize(bytes) {
+    if (!bytes && bytes !== 0) return "";
+    const units = ["B", "KB", "MB", "GB"];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+    return `${bytes.toFixed(i ? 1 : 0)} ${units[i]}`;
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function safeUrl(url) {
+    try {
+      const u = new URL(url);
+      return (u.protocol === "https:" || u.protocol === "http:") ? u.href : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // A small slice of Discord markdown: code blocks, inline code, bold, italic,
+  // underline, strikethrough, quotes, [text](links) and bare links.
+  function markdown(text) {
+    if (!text) return "";
+    const blocks = [];
+    let html = escapeHtml(text);
+
+    html = html.replace(/```(?:[\w+-]*\n)?([\s\S]*?)```/g, (_, code) => {
+      blocks.push(`<pre><code>${code.replace(/^\n|\n$/g, "")}</code></pre>`);
+      return `\u0000${blocks.length - 1}\u0000`;
+    });
+    html = html.replace(/`([^`\n]+)`/g, (_, code) => {
+      blocks.push(`<code>${code}</code>`);
+      return `\u0000${blocks.length - 1}\u0000`;
+    });
+
+    // Links are set aside too, so the bold/italic rules below can't touch the URLs.
+    const stash = piece => {
+      blocks.push(piece);
+      return `\u0000${blocks.length - 1}\u0000`;
+    };
+    const anchor = (url, label) => {
+      const href = safeUrl(url.replace(/&amp;/g, "&"));
+      return href ? stash(`<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`) : null;
+    };
+
+    html = html
+      .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (whole, label, url) => anchor(url, label) || label)
+      .replace(/(^|[\s(])(https?:\/\/[^\s<\u0000]+)/g, (whole, lead, url) => lead + (anchor(url, url) || url))
+      .replace(/\*\*([\s\S]+?)\*\*/g, "<b>$1</b>")
+      .replace(/__([\s\S]+?)__/g, "<u>$1</u>")
+      .replace(/\*([^*\n]+)\*/g, "<i>$1</i>")
+      .replace(/(^|\W)_([^_\n]+)_(?=\W|$)/g, "$1<i>$2</i>")
+      .replace(/~~([\s\S]+?)~~/g, "<s>$1</s>")
+      .replace(/^&gt; (.*)$/gm, "<blockquote>$1</blockquote>");
+
+    // A link label can hold inline code, so put pieces back until none are left.
+    for (let pass = 0; pass < 3 && html.includes("\u0000"); pass++) {
+      html = html.replace(/\u0000(\d+)\u0000/g, (_, i) => blocks[Number(i)]);
+    }
+    return html;
+  }
+
+  // ---- Rendering -----------------------------------------------------------
+
+  function render(data) {
+    const t = data.ticket || {};
+    document.title = `${data.channel || "Ticket"} - Transcript`;
+    document.getElementById("title").textContent = `${t.kind || "Ticket"} transcript: ${data.channel || t.id || ""}`;
+    document.getElementById("subtitle").textContent = data.server ? `${data.server}` : "";
+
+    const who = p => (p ? `${p.name} (${p.id})` : "Unknown");
+    const info = [
+      ["Type", t.type],
+      ["Category", t.category],
+      ["Status when deleted", t.status],
+      ["Ticket owner", who(t.owner)],
+      ["Deleted by", who(t.deleted_by)],
+      ["Opened", fmtTime(t.opened_at)],
+      ["Deleted", fmtTime(t.deleted_at)],
+      ["Messages", String((data.messages || []).length)],
+    ];
+    const infoBox = document.getElementById("info");
+    for (const [label, value] of info) {
+      if (!value) continue;
+      const cell = el("div");
+      cell.append(el("b", null, label), el("span", null, value));
+      infoBox.append(cell);
+    }
+
+    out.innerHTML = "";
+    const messages = data.messages || [];
+    if (!messages.length) {
+      const box = el("div", "state");
+      box.append(el("h2", null, "No messages"), document.createTextNode("Nobody wrote anything in this ticket."));
+      out.append(box);
+      return;
+    }
+
+    let last = null;
+    for (const m of messages) {
+      const a = m.author || {};
+      const time = new Date(m.time);
+      const grouped = last && last.author.id === a.id && time - new Date(last.time) < 7 * 60 * 1000;
+      out.append(renderMessage(m, grouped));
+      last = m;
+    }
+  }
+
+  function renderMessage(m, grouped) {
+    const a = m.author || {};
+    const row = el("div", grouped ? "msg cont" : "msg");
+
+    const avatar = el("img", "avatar");
+    avatar.alt = "";
+    avatar.loading = "lazy";
+    avatar.referrerPolicy = "no-referrer";
+    const avatarUrl = safeUrl(a.avatar);
+    if (avatarUrl) avatar.src = avatarUrl;
+    avatar.onerror = () => avatar.removeAttribute("src");
+    row.append(avatar);
+
+    const body = el("div", "body");
+    if (!grouped) {
+      const meta = el("div", "meta");
+      const name = el("span", "name", a.name || a.username || "Unknown");
+      if (a.color) name.style.color = a.color;
+      name.title = `${a.username || ""} (${a.id || ""})`;
+      meta.append(name);
+      if (a.bot) meta.append(el("span", "tag", "Bot"));
+      meta.append(el("span", "time", fmtTime(m.time)));
+      body.append(meta);
+    }
+
+    if (m.content) {
+      const content = el("div", "content");
+      content.innerHTML = markdown(m.content);
+      if (m.edited) {
+        const edited = el("span", "edited", " (edited)");
+        edited.title = fmtTime(m.edited);
+        content.append(edited);
+      }
+      body.append(content);
+    }
+
+    for (const file of m.attachments || []) body.append(renderAttachment(file));
+    for (const embed of m.embeds || []) body.append(renderEmbed(embed));
+
+    row.append(body);
+    return row;
+  }
+
+  function renderAttachment(file) {
+    const box = el("div", "attach");
+    const isImage = (file.type || "").startsWith("image/");
+    const dataUrl = typeof file.data === "string" && /^data:image\/(png|jpeg|gif|webp);base64,/.test(file.data) ? file.data : null;
+
+    if (isImage && dataUrl) {
+      const img = el("img");
+      img.src = dataUrl;
+      img.alt = file.name || "image";
+      img.loading = "lazy";
+      box.append(img);
+      return box;
+    }
+
+    // Anything else only has Discord's link, which may have expired.
+    const card = el("div", "file");
+    const href = safeUrl(file.url);
+    if (href) {
+      const link = el("a", null, file.name || "file");
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      card.append(link);
+    } else {
+      card.append(document.createTextNode(file.name || "file"));
+    }
+    card.append(el("small", null, `${fmtSize(file.size)}${isImage ? " · image too large to keep" : ""}`));
+    box.append(card);
+    return box;
+  }
+
+  function renderEmbed(e) {
+    const box = el("div", "embed");
+    if (typeof e.color === "number") box.style.borderLeftColor = `#${e.color.toString(16).padStart(6, "0")}`;
+
+    if (e.author && e.author.name) box.append(el("div", "author", e.author.name));
+
+    if (e.title) {
+      const title = el("div", "title");
+      const href = e.url && safeUrl(e.url);
+      if (href) {
+        const link = el("a", null, e.title);
+        link.href = href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        title.append(link);
+      } else {
+        title.textContent = e.title;
+      }
+      box.append(title);
+    }
+
+    if (e.description) {
+      const desc = el("div", "desc");
+      desc.innerHTML = markdown(e.description);
+      box.append(desc);
+    }
+
+    if (Array.isArray(e.fields) && e.fields.length) {
+      const fields = el("div", "fields");
+      for (const f of e.fields) {
+        const field = el("div", f.inline ? "field inline" : "field");
+        const value = el("div");
+        value.innerHTML = markdown(f.value || "");
+        field.append(el("b", null, f.name || ""), value);
+        fields.append(field);
+      }
+      box.append(fields);
+    }
+
+    const image = e.image && safeUrl(e.image.url);
+    if (image) {
+      const img = el("img", "big");
+      img.src = image;
+      img.alt = "";
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      box.append(img);
+    }
+
+    const footerParts = [];
+    if (e.footer && e.footer.text) footerParts.push(e.footer.text);
+    if (e.timestamp) footerParts.push(fmtTime(e.timestamp));
+    if (footerParts.length) box.append(el("div", "footer", footerParts.join(" · ")));
+
+    return box;
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>
